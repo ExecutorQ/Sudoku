@@ -7,14 +7,31 @@
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: url('aurora.jpg') no-repeat center center fixed;
+      padding: 0;
+      background-image: url('aurora.jpg'); /* 替換成你的背景圖 */
       background-size: cover;
-      color: rgb(255, 255, 255);
+      background-position: center;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      color: white;
+      font-family: Arial, sans-serif;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6); /* 黑色半透明 */
+      z-index: 0;
     }
 
     .overlay {
-      background-color: rgba(0, 0, 0, 0.5); /* 黑色半透明遮罩 */
+      position: relative;
+      z-index: 1;
       min-height: 100vh;
       padding: 20px;
       box-sizing: border-box;
@@ -44,13 +61,10 @@
       width: 40px;
       height: 40px;
       box-sizing: border-box;
-      border: 1px solid #d3d3d3;
+      border: 1px solid white;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 18px;
-      font-weight: bold;
-      color: rgb(255, 255, 255);
     }
 
     .sudoku-cell input {
@@ -58,24 +72,23 @@
       height: 100%;
       text-align: center;
       font-size: 18px;
-      border: none;
-      outline: none;
+      font-weight: bold;
       background: transparent;
       color: white;
+      border: none;
+      outline: none;
     }
 
+    /* 粗線條九宮格效果 */
     .sudoku-cell:nth-child(3n) {
       border-right: 2px solid white;
     }
-
     .sudoku-grid .sudoku-cell:nth-child(9n + 1) {
       border-left: 2px solid white;
     }
-
     .sudoku-grid .sudoku-cell:nth-child(-n + 9) {
       border-top: 2px solid white;
     }
-
     .sudoku-grid .sudoku-cell:nth-child(n + 19):nth-child(-n + 27),
     .sudoku-grid .sudoku-cell:nth-child(n + 46):nth-child(-n + 54),
     .sudoku-grid .sudoku-cell:nth-child(n + 73):nth-child(-n + 81) {
@@ -91,11 +104,15 @@
       font-size: 16px;
       margin: 5px;
       border-radius: 5px;
-      border: 1px solid #ccc;
-      cursor: pointer;
-      background-color: white;
-      color: black;
+      border: 1px solid white;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
       font-weight: bold;
+      cursor: pointer;
+    }
+
+    .controls button:hover {
+      background-color: rgba(255, 255, 255, 0.2);
     }
 
     @media (max-width: 768px) {
@@ -107,6 +124,9 @@
       .sudoku-cell {
         width: 30px;
         height: 30px;
+      }
+
+      .sudoku-cell input {
         font-size: 16px;
       }
 
@@ -119,7 +139,7 @@
 </head>
 <body>
   <div class="overlay">
-    <div class="instructions">
+    <div class="instructions" id="instructions">
       請在左邊輸入數獨題目，點擊「獲取答案」以顯示右側解答，或點擊「清除格子」重新輸入。
     </div>
 
@@ -220,6 +240,20 @@
         alert("無法解出這個數獨！");
       }
     }
+
+    // 裝置寬度變化時更新指示文字
+    function updateInstructionsText() {
+      const isMobile = window.innerWidth < 768;
+      const instructions = document.getElementById("instructions");
+      if (instructions) {
+        instructions.innerText = isMobile
+          ? "請在上方輸入數獨題目，點擊「獲取答案」以顯示下方解答，或點擊「清除格子」重新輸入。"
+          : "請在左邊輸入數獨題目，點擊「獲取答案」以顯示右側解答，或點擊「清除格子」重新輸入。";
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", updateInstructionsText);
+    window.addEventListener("resize", updateInstructionsText);
   </script>
 </body>
 </html>
