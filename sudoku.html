@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sudoku Solver</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url('aurora.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: rgb(255, 255, 255);
+    }
+
+    .overlay {
+      background-color: rgba(0, 0, 0, 0.5); /* 黑色半透明遮罩 */
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .instructions {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    .sudoku-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 20px;
+    }
+
+    .sudoku-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 40px);
+      grid-template-rows: repeat(9, 40px);
+    }
+
+    .sudoku-cell {
+      width: 40px;
+      height: 40px;
+      box-sizing: border-box;
+      border: 1px solid #d3d3d3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: rgb(255, 255, 255);
+    }
+
+    .sudoku-cell input {
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      font-size: 18px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: white;
+    }
+
+    .sudoku-cell:nth-child(3n) {
+      border-right: 2px solid white;
+    }
+
+    .sudoku-grid .sudoku-cell:nth-child(9n + 1) {
+      border-left: 2px solid white;
+    }
+
+    .sudoku-grid .sudoku-cell:nth-child(-n + 9) {
+      border-top: 2px solid white;
+    }
+
+    .sudoku-grid .sudoku-cell:nth-child(n + 19):nth-child(-n + 27),
+    .sudoku-grid .sudoku-cell:nth-child(n + 46):nth-child(-n + 54),
+    .sudoku-grid .sudoku-cell:nth-child(n + 73):nth-child(-n + 81) {
+      border-bottom: 2px solid white;
+    }
+
+    .controls {
+      text-align: center;
+    }
+
+    .controls button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background-color: white;
+      color: black;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      .sudoku-grid {
+        grid-template-columns: repeat(9, 30px);
+        grid-template-rows: repeat(9, 30px);
+      }
+
+      .sudoku-cell {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+      }
+
+      .controls button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <div class="instructions">
+      請在左邊輸入數獨題目，點擊「獲取答案」以顯示右側解答，或點擊「清除格子」重新輸入。
+    </div>
+
+    <div class="sudoku-container">
+      <div class="sudoku-grid" id="input-grid"></div>
+      <div class="sudoku-grid" id="output-grid"></div>
+    </div>
+
+    <div class="controls">
+      <button onclick="solveSudoku()">獲取答案</button>
+      <button onclick="clearGrids()">清除格子</button>
+    </div>
+  </div>
+
+  <script>
+    const inputGrid = document.getElementById("input-grid");
+    const outputGrid = document.getElementById("output-grid");
+    let inputBoxes = [];
+
+    for (let i = 0; i < 81; i++) {
+      const inputCell = document.createElement("div");
+      inputCell.className = "sudoku-cell";
+      const inputBox = document.createElement("input");
+      inputBox.setAttribute("type", "text");
+      inputBox.setAttribute("maxlength", "1");
+      inputBox.addEventListener("input", () => {
+        inputBox.value = inputBox.value.replace(/[^1-9]/g, '');
+        if (inputBox.value !== "") {
+          const idx = inputBoxes.indexOf(inputBox);
+          if (idx < 80) inputBoxes[idx + 1].focus();
+        }
+      });
+      inputCell.appendChild(inputBox);
+      inputGrid.appendChild(inputCell);
+      inputBoxes.push(inputBox);
+
+      const outputCell = document.createElement("div");
+      outputCell.className = "sudoku-cell";
+      outputGrid.appendChild(outputCell);
+    }
+
+    function getGridValues() {
+      return inputBoxes.map(inp => {
+        const val = parseInt(inp.value);
+        return isNaN(val) ? 0 : val;
+      });
+    }
+
+    function setOutputGrid(grid) {
+      const cells = outputGrid.querySelectorAll(".sudoku-cell");
+      grid.forEach((val, i) => {
+        cells[i].textContent = val === 0 ? "" : val;
+      });
+    }
+
+    function clearGrids() {
+      inputBoxes.forEach(inp => inp.value = "");
+      const cells = outputGrid.querySelectorAll(".sudoku-cell");
+      cells.forEach(cell => cell.textContent = "");
+      inputBoxes[0].focus();
+    }
+
+    function isValid(grid, row, col, num) {
+      for (let i = 0; i < 9; i++) {
+        if (grid[row * 9 + i] === num) return false;
+        if (grid[i * 9 + col] === num) return false;
+        const r = 3 * Math.floor(row / 3) + Math.floor(i / 3);
+        const c = 3 * Math.floor(col / 3) + i % 3;
+        if (grid[r * 9 + c] === num) return false;
+      }
+      return true;
+    }
+
+    function solve(grid) {
+      for (let i = 0; i < 81; i++) {
+        if (grid[i] === 0) {
+          const row = Math.floor(i / 9);
+          const col = i % 9;
+          for (let num = 1; num <= 9; num++) {
+            if (isValid(grid, row, col, num)) {
+              grid[i] = num;
+              if (solve(grid)) return true;
+              grid[i] = 0;
+            }
+          }
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function solveSudoku() {
+      const grid = getGridValues();
+      const copy = [...grid];
+      if (solve(copy)) {
+        setOutputGrid(copy);
+      } else {
+        alert("無法解出這個數獨！");
+      }
+    }
+  </script>
+</body>
+</html>
