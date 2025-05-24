@@ -166,12 +166,24 @@
       inputBox.setAttribute("type", "text");
       inputBox.setAttribute("maxlength", "1");
       inputBox.addEventListener("input", () => {
-        inputBox.value = inputBox.value.replace(/[^1-9]/g, '');
+        inputBox.value = inputBox.value.replace(/[^0-9]/g, '');
         if (inputBox.value !== "") {
           const idx = inputBoxes.indexOf(inputBox);
           if (idx < 80) inputBoxes[idx + 1].focus();
         }
       });
+
+      inputBox.addEventListener("keydown", (e) => {
+        const idx = inputBoxes.indexOf(inputBox);
+        if (e.key === "Backspace") {
+          if (inputBox.value === "" && idx > 0) {
+            e.preventDefault();  // 防止預設移動
+            inputBoxes[idx - 1].value = "";
+            inputBoxes[idx - 1].focus();
+          }
+        }
+      });
+
       inputCell.appendChild(inputBox);
       inputGrid.appendChild(inputCell);
       inputBoxes.push(inputBox);
@@ -184,7 +196,7 @@
     function getGridValues() {
       return inputBoxes.map(inp => {
         const val = parseInt(inp.value);
-        return isNaN(val) ? 0 : val;
+        return isNaN(val) || val === 0 ? 0 : val;
       });
     }
 
