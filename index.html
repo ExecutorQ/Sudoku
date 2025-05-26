@@ -162,7 +162,8 @@
       const inputCell = document.createElement("div");
       inputCell.className = "sudoku-cell";
       const inputBox = document.createElement("input");
-      inputBox.setAttribute("type", "text");
+      inputBox.setAttribute("type", "tel"); // ✅ 讓手機直接跳出數字鍵盤
+      inputBox.setAttribute("inputmode", "numeric"); // ✅ 提示使用數字輸入
       inputBox.setAttribute("maxlength", "1");
       inputBox.dataset.index = i;
 
