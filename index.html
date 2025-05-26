@@ -153,7 +153,6 @@
       <button onclick="clearGrids()">清除格子</button>
     </div>
   </div>
-
   <script>
     const inputGrid = document.getElementById("input-grid");
     const outputGrid = document.getElementById("output-grid");
@@ -165,6 +164,7 @@
       const inputBox = document.createElement("input");
       inputBox.setAttribute("type", "text");
       inputBox.setAttribute("maxlength", "1");
+      inputBox.dataset.index = i;
 
       inputBox.addEventListener("input", () => {
         inputBox.value = inputBox.value.replace(/[^0-9]/g, '');
@@ -175,22 +175,26 @@
       });
 
       inputBox.addEventListener("keydown", (e) => {
-        const idx = inputBoxes.indexOf(inputBox);
+        const idx = parseInt(inputBox.dataset.index);
         const row = Math.floor(idx / 9);
         const col = idx % 9;
 
         switch (e.key) {
-          case "ArrowRight":
-            if (col < 8) inputBoxes[idx + 1].focus();
-            break;
-          case "ArrowLeft":
-            if (col > 0) inputBoxes[idx - 1].focus();
+          case "ArrowUp":
+            if (row > 0) inputBoxes[(row - 1) * 9 + col].focus();
+            e.preventDefault();
             break;
           case "ArrowDown":
-            if (row < 8) inputBoxes[idx + 9].focus();
+            if (row < 8) inputBoxes[(row + 1) * 9 + col].focus();
+            e.preventDefault();
             break;
-          case "ArrowUp":
-            if (row > 0) inputBoxes[idx - 9].focus();
+          case "ArrowLeft":
+            if (col > 0) inputBoxes[row * 9 + (col - 1)].focus();
+            e.preventDefault();
+            break;
+          case "ArrowRight":
+            if (col < 8) inputBoxes[row * 9 + (col + 1)].focus();
+            e.preventDefault();
             break;
           case "Backspace":
             if (inputBox.value === "" && idx > 0) {
@@ -201,6 +205,10 @@
             break;
           case "Enter":
             solveSudoku();
+            break;
+          case "Delete":
+            e.preventDefault();
+            clearGrids();
             break;
         }
       });
@@ -286,6 +294,14 @@
 
     window.addEventListener("DOMContentLoaded", updateInstructionsText);
     window.addEventListener("resize", updateInstructionsText);
+
+    // ⌨️ 全局監聽 Delete 鍵（不限定焦點在哪）
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Delete") {
+        e.preventDefault();
+        clearGrids();
+      }
+    });
   </script>
 </body>
 </html>
